@@ -1,0 +1,246 @@
+﻿letter : a | . . . | z | A | . . . | Z
+digit : 0 | . . . | 9
+intNum : digit digit*
+floatNum : digit*.digit digit*
+assignBoolOp : =
+assignNumOp : -= | += | *= | /= | =
+relOp : <= | < | > | >= | == | ! = 
+Ident : letter(digit | letter)
+Bool : false | true
+
+
+
+
+defineDecl : #Define Ident (floatNum | intNum | bool)\n defineDecl | program
+
+
+program : (intDecl | boolDecl | varDecl | floatDecl | ifStmt | intAssignStmt | boolAssignStmt | varAssignStmt | floatAssignStmt | constAssignStmt | SwitchStmt | dowhileStmt | minStmt | maxStmt | meanStmt | sqrtNStmt | 
+| comment | unaryExpr | whileStmt | forStmt | printStmt)*
+
+
+intDecl : int (intDeclWithAssign | intDeclWithoutAssign);
+intDeclWithoutAssign : (Ident,)* Ident
+intDeclWithAssign :
+
+
+
+-----------------------------------------------------------------------
+
+
+
+
+S -> 
+    Define S | Assign S | UnaryExp S | Print S | Comment S | If S | While S | for S
+    Define | Assign | UnaryExp | Print | Comment | If | While | for
+
+
+// for "for , do while, if , else"
+Block -> 
+    Assign Block | UnaryExp Block | Print Block | Comment Block | If Block | While Block | for Block
+    Assign | UnaryExp | Print | Comment | If | While | for
+
+
+Define -> 
+	"int"   VariableInt ";" |
+	"bool"  VariableBool ";" |
+    "float" VariableFloat ";" |
+    "var"   VariableVar ";"
+
+
+VariableInt ->
+	Identifier_A |
+    Identifier_A "," VariableInt |
+	Identifier_A "," VariableInt "," valueInt |
+    Identifier_A "=" valueInt
+
+
+VariableFloat ->
+	Identifier_A |
+    Identifier_A "," VariableFloat |
+	Identifier_A "," VariableFloat "," valueFloat |
+    Identifier_A "=" valueFloat
+
+
+VariableVar ->
+	Identifier_A |
+    Identifier_A "," VariableVar |
+	Identifier_A "," VariableVar "," valueVar |
+    Identifier_A "=" valueVar
+
+
+VariableBool ->
+	Identifier_A |
+    Identifier_A "," VariableBoll |
+	Identifier_A "," VariableBool "," valueBool |
+    Identifier_A "=" valueBool
+
+
+Digit ->
+	0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+
+Alphabet ->
+    ("_" | "a"-"z" | "A"-"Z") (Digit | "_" | "a"-"z" | "A"-"Z")*
+
+
+Number_A_Int ->
+	Number_B_Int |
+	"-" Number_B_Int |
+    "+" Number_B_Int
+
+
+Number_B_Int ->
+	Digit |
+	Digit Number_B_Int
+
+
+Boolean ->
+	true |
+	false
+
+
+Identifier_A ->
+	Alphabet |
+	// Alphabet Identifier_B
+
+
+Identifier_B ->
+	Digit |
+	Alphabet | 
+	Digit Identifier_B |
+	Alphabet Identifier_B
+    
+
+Print ->
+	"print(" Identifier_A ");"
+
+
+Comment ->
+	"/*" CommentBody
+
+
+CommentBody ->
+	"*/"
+	Digit CommentBody |
+	Alphabet CommentBody |
+
+
+Assign -> Identifier_A AssignOperation Value ";"
+
+
+AssignOperation -> "-=" | "+=" | "*=" | "/=" | "="
+
+
+
+
+
+Value -> LogicalValue | ArithmeticValue
+
+valueInt -> ArithmeticValueInt
+
+
+
+
+
+
+ArithmeticValue ->
+    ArithmeticValue "+" Term |
+    ArithmeticValue "-" Term | 
+    Term
+
+
+Term -> Term "*" Power |
+        Term "%" Power |
+        Term "/" Power | Power
+
+
+Power -> Power "^" Factor | Factor
+
+
+Factor -> Identifier_A | Number_A | "(" ArithmeticValue ")" | "-(" ArithmeticValue ")" | "+(" ArithmeticValue ")" 
+
+
+ArithmeticValueInt ->
+    ArithmeticValueInt "+" TermInt |
+    ArithmeticValueInt "-" TermInt | 
+    TermInt
+
+
+TermInt -> TermInt "*" PowerInt |
+        TermInt "%" PowerInt |
+        TermInt "/" PowerInt | PowerInt
+
+
+PowerInt -> PowerInt "^" FactorInt | FactorInt
+
+
+FactorInt -> Identifier_A | Number_A_Int | "(" ArithmeticValueInt ")" | "-(" ArithmeticValueInt ")" | "+(" ArithmeticValueInt ")" 
+
+
+
+
+
+
+
+
+
+
+CompareOperation -> ">" | "<" | ">=" | "<=" | "=="
+
+
+logicalValue -> 
+    "(" logicalValue ")" |
+    "true" |
+    "false" |
+    ArithmeticValue CompareOperation ArithmeticValue |
+    logicalValue "and" logicalValue |
+    logicalValue "or"  logicalValue |
+    logicalValue "xor" logicalValue |
+    Identifier_A
+
+
+Unary ->
+    Identifier_A "++" |
+    Identifier_A "--"
+
+    
+UnaryExp ->
+    Unary ";"
+
+
+If ->
+    "if" "(" logicalValue ")" "{" Block "}" |
+    "if" "(" logicalValue ")" "{" Block "}" Else
+    
+    "if" "(" logicalValue ")" "{" "}" |
+    "if" "(" logicalValue ")" "{" "}" Else |
+    
+
+Else ->
+    "else" If | 
+    "else" "{" Block "}" |
+    "else" "{" "}"
+
+
+While ->
+	"while" "(" logicalValue ")" "{" Block "}" |
+	"while" "(" logicalValue ")" "{" "}"
+
+
+For ->
+	"for" "(" ForInitialization ";" ForCondition ";" ForUpdate ")" "{" Block "}" |
+	"for" "(" ForInitialization ";" ForCondition ";" ForUpdate ")" "{" "}"
+
+
+ForInitialization ->
+	Identifier_A "=" ArithmeticValue
+
+
+ForCondition ->
+	logicalValue
+
+
+ForUpdate ->
+	Unary |
+	Identifier_A AssignOperation Value
+    
