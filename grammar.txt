@@ -1,255 +1,140 @@
-﻿letter : a | . . . | z | A | . . . | Z
-digit : 0 | . . . | 9
+----------------------------------------------------------------------------------------------------------------------
+//ALPHABET
+letter : "a" | . . . | "z" | "A" | . . . | "Z"
+digit : "0" | . . . | "9"
 intNum : digit digit*
-floatNum : digit*.digit digit*
-assignBoolOp : =
-assignNumOp : -= | += | *= | /= | =
-relOp : <= | < | > | >= | == | != 
+floatNum : digit* "." intNum | intNum "." digit*
+assignNumOp : "-=" | "+=" | "*=" | "/=" | "=" | "%="
+relOp : "<=" | "<" | ">" | ">=" | "==" | "!="   
 Ident : letter(digit | letter | "_")
-Bool : false | true
+Bool : "false" | "true"
+----------------------------------------------------------------------------------------------------------------------
 
-
-
-
+----------------------------------------------------------------------------------------------------------------------
+//DEFINE
+S : defineDecl
 defineDecl : "#Define" Ident (floatNum | intNum | bool)"\n" defineDecl | program
 
+//MAIN PROGRAM
+program : (intDecl | boolDecl | varDecl | floatDecl | constDecl | assignList)*
 
-program : (intDecl | boolDecl | varDecl | floatDecl | ifStmt | intAssignStmt | boolAssignStmt | varAssignStmt | floatAssignStmt | constAssignStmt | SwitchStmt | dowhileStmt | minStmt | maxStmt | meanStmt | sqrtNStmt | 
-| oneLineComment | multiLineComment | unaryExpr | doWhileStmt | forStmt | printStmt)*
+//ASSIGN LIST
+assignList : (intAssignStmt | floatAssignStmt | boolAssignStmt | ifStmt | doWhileStmt | forStmt | SwitchStmt |
+              oneLineComment | multiLineComment | unaryExpr | ternaryStmt | printStmt | minStmt | maxStmt | meanStmt | sqrtNStmt )*
+---------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------
+//COMMENTS
+oneLineComment : "//" Σ
+multiLineComment : "/*" Σ "*/"
+----------------------------------------------------------------------------------------------------------------------
 
-intDecl : "int" (intDeclWithAssign | intDeclWithoutAssign)";"
+----------------------------------------------------------------------------------------------------------------------
+//INT DECL
+intDecl : "int" (intDeclWithAssign | intDeclWithoutAssign | intDeclCast)";"
 intDeclWithoutAssign : (Ident",")* Ident
-intDeclWithAssign : Ident "," intDeclWithAssign "," mathIntExpr | Ident "," intDeclWithAssign | Ident assignIntOp mathIntExpr
+intDeclCast : Ident "=int(" floatNum | intNum | bool ")"
+intDeclWithAssign : Ident "," intDeclWithAssign "," mathIntExpr | Ident "," intDeclWithAssign | Ident "=" mathIntExpr
 
-
+//INT MATH
 mathIntExpr : termInt (("+"| "-" ) termInt)*
 termInt : factorInt (("*" | "/" | "%") factorInt)*
 factorInt : finalInt ("^" finalInt)*
 finalInt : "(" mathIntExpr ")" | "-(" mathIntExpr ")" | Ident | intNum | "-"intNum | "+"intNum | Ident"++" | Ident"--"
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+//FLOAT DECL
+floatDecl : "float" (floatDeclWithAssign | floatDeclWithoutAssign | floatDeclCast)";"
+floatDeclWithoutAssign : (Ident",")* Ident
+floatDeclCast : Ident "=float(" floatNum | intNum | bool ")"
+floatDeclWithAssign : Ident "," floatDeclWithAssign "," mathFloatExpr | Ident "," floatDeclWithAssign | Ident "=" mathFloatExpr
+
+//FLOAT MATH
+mathFloatExpr : termFloat (("+"| "-" ) termFloat)*
+termFloat : factorFloat (("*" | "/") factorFloat)*
+factorFloat : finalFloat ("^" finalFloat)*
+finalFloat : "(" mathFloatExpr ")" | "-(" mathFloatExpr ")" | Ident | floatNum | "-"floatNum | "+"floatNum | Ident"++" | Ident"--"
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+//BOOL DECL
+boolDecl : "bool" (boolDeclWithAssign | boolDeclWithoutAssign | boolDeclCast)";"
+boolDeclWithoutAssign : (Ident ",")* Ident
+boolDeclCast : Ident "=bool(" floatNum | intNum | bool ")"
+boolDeclWithAssign : Ident "," boolDeclWithAssign "," logicalExpr | Ident "," boolDeclWithAssign | Ident "=" logicalExpr
+
+//BOOL LOGIC
+logicalExpr : comparison (("and" | "xor" | "or") comparison)*
+comparison : mathIntExpr relOp mathIntExpr| mathFloatExpr relOp mathFloatExpr | 
+             Ident ( "not" | "" ) "in[" ((intNum "," )* intNum) | ((floatNum "," )* floatNum) "]" |
+             "(" logicalExpr ")" | Bool | Ident
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+//VAR DECL
+varDecl : "var" (varDeclWithAssign | varDeclWithoutAssign)";"
+varDeclWithoutAssign : (Ident",")* Ident
+varDeclWithAssign : Ident "," varDeclWithAssign "," mathIntExpr | Ident "," varDeclWithAssign "," mathFloatExpr | Ident "," varDeclWithAssign "," logicalExpr |
+                    Ident "=" mathIntExpr | Ident "=" mathFloatExpr | Ident "=" logicalExpr |
+                    Ident "," varDeclWithAssign
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+//CONST DECL
+constDecl : "const" ("int" intDeclWithAssign | "float" floatDeclWithAssign | "var" varDeclWithAssign | "bool" boolDeclWithAssign)";"
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+//ASSIGN VARIABLE
+intAssignStmt : Ident assignNumOp mathIntExpr";"
+floatAssignStmt : Ident assignNumOp-{"%="} mathFloatExpr";"
+boolAssignStmt : Ident "=" logicalExpr";"
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+//MATH FUNCS
+minStmt : "min(" (floatNum | intNum) "," (floatNum | intNum) ");"
+maxStmt : "max(" (floatNum | intNum) "," (floatNum | intNum) ");"
+meanStmt : "mean(" Ident "," Ident ");"
+sqrtNStmt : "sqrtN("(intNum | floatNum) "," intNum ");"
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+//If
+ifStmt : "if(" logicalExpr "){" (assignList | "break;" | "continue;") "}" elseIfStmt | 
+         "if(" logicalExpr "){" (assignList | "break;" | "continue;") "}" elseIfStmt "else{" (assignList | "break;" | "continue;") "}"
+elseIfStmt : ( "else if (" logicalExpr "){" (assignList | "break;" | "continue;") "}" )*
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+//TERNARY OP
+ternaryStmt : Ident "=" logicalExpr "?" typeTernary ";"
+typeTernary :  (Ident ":" Ident) | (intNum ":" intNum) | (floatNum ":" floatNum) | (bool ":" bool)
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+//DO WHILE
+doWhileStmt: "do{" (assignList | "break;" | "continue;") "}while(" logicalExpr ")"
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+//FOR
+forStmt : "for(" intAssignStmt ";" logicalExpr ";" thirdPartFor "){" (assignList | "break;" | "continue;") "}"
+thirdPartFor : Ident assignNumOp-{"="} mathIntExpr | Ident"--" | Ident"++"
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+//SWITCH
+SwitchStmt : "switch(" Ident "){" caseStmt "}"
+caseStmt : ("case" intNum ":" assignList ("break;" | "" ))* 
+           (("default:" assignList ("break;" | "" )) | "") 
+           ("case" intNum ":" assignList ("break;" | "" ))*
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+//PRINT
+printStmt : "print(" (logicalExpr | Ident | mathFloatExpr | mathIntExpr) ");"
+----------------------------------------------------------------------------------------------------------------------
 
-
------------------------------------------------------------------------
-
-
-
-
-S -> 
-    Define S | Assign S | UnaryExp S | Print S | Comment S | If S | While S | for S
-    Define | Assign | UnaryExp | Print | Comment | If | While | for
-
-
-// for "for , do while, if , else"
-Block -> 
-    Assign Block | UnaryExp Block | Print Block | Comment Block | If Block | While Block | for Block
-    Assign | UnaryExp | Print | Comment | If | While | for
-
-
-Define -> 
-	"int"   VariableInt ";" |
-	"bool"  VariableBool ";" |
-    "float" VariableFloat ";" |
-    "var"   VariableVar ";"
-
-
-VariableInt ->
-	Identifier_A |
-    Identifier_A "," VariableInt |
-	Identifier_A "," VariableInt "," valueInt |
-    Identifier_A "=" valueInt
-
-
-VariableFloat ->
-	Identifier_A |
-    Identifier_A "," VariableFloat |
-	Identifier_A "," VariableFloat "," valueFloat |
-    Identifier_A "=" valueFloat
-
-
-VariableVar ->
-	Identifier_A |
-    Identifier_A "," VariableVar |
-	Identifier_A "," VariableVar "," valueVar |
-    Identifier_A "=" valueVar
-
-
-VariableBool ->
-	Identifier_A |
-    Identifier_A "," VariableBoll |
-	Identifier_A "," VariableBool "," valueBool |
-    Identifier_A "=" valueBool
-
-
-Digit ->
-	0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
-
-
-Alphabet ->
-    ("_" | "a"-"z" | "A"-"Z") (Digit | "_" | "a"-"z" | "A"-"Z")*
-
-
-intNum_A_Int ->
-	intNum
-_B_Int |
-	"-" intNum
-_B_Int |
-    "+" intNum
-_B_Int
-
-
-intNum_B_Int ->
-	Digit |
-	Digit intNum
-_B_Int
-
-
-Boolean ->
-	true |
-	false
-
-
-Identifier_A ->
-	Alphabet |
-	// Alphabet Identifier_B
-
-
-Identifier_B ->
-	Digit |
-	Alphabet | 
-	Digit Identifier_B |
-	Alphabet Identifier_B
-    
-
-Print ->
-	"print(" Identifier_A ");"
-
-
-Comment ->
-	"/*" CommentBody
-
-
-CommentBody ->
-	"*/"
-	Digit CommentBody |
-	Alphabet CommentBody |
-
-
-Assign -> Identifier_A AssignOperation Value ";"
-
-
-AssignOperation -> "-=" | "+=" | "*=" | "/=" | "="
-
-
-
-
-
-Value -> LogicalValue | ArithmeticValue
-
-valueInt -> ArithmeticValueInt
-
-
-
-
-
-
-ArithmeticValue ->
-    ArithmeticValue "+" termInt |
-    ArithmeticValue "-" termInt | 
-    termInt
-
-
-termInt -> termInt "*" Power |
-        termInt "%" Power |
-        termInt "/" Power | Power
-
-
-Power -> Power "^" FactorInt | FactorInt
-
-
-FactorInt -> Identifier_A | intNum_A | "(" ArithmeticValue ")" | "-(" ArithmeticValue ")" | "+(" ArithmeticValue ")" 
-
-
-ArithmeticValueInt ->
-    ArithmeticValueInt "+" termIntInt |
-    ArithmeticValueInt "-" termIntInt | 
-    termIntInt
-
-
-termIntInt -> termIntInt "*" PowerInt |
-        termIntInt "%" PowerInt |
-        termIntInt "/" PowerInt | PowerInt
-
-
-PowerInt -> PowerInt "^" FactorIntInt | FactorIntInt
-
-
-FactorIntInt -> Identifier_A | intNum_A_Int | "(" ArithmeticValueInt ")" | "-(" ArithmeticValueInt ")" | "+(" ArithmeticValueInt ")" 
-
-
-
-
-
-
-
-
-
-
-CompareOperation -> ">" | "<" | ">=" | "<=" | "=="
-
-
-logicalValue -> 
-    "(" logicalValue ")" |
-    "true" |
-    "false" |
-    ArithmeticValue CompareOperation ArithmeticValue |
-    logicalValue "and" logicalValue |
-    logicalValue "or"  logicalValue |
-    logicalValue "xor" logicalValue |
-    Identifier_A
-
-
-Unary ->
-    Identifier_A "++" |
-    Identifier_A "--"
-
-    
-UnaryExp ->
-    Unary ";"
-
-
-If ->
-    "if" "(" logicalValue ")" "{" Block "}" |
-    "if" "(" logicalValue ")" "{" Block "}" Else
-    
-    "if" "(" logicalValue ")" "{" "}" |
-    "if" "(" logicalValue ")" "{" "}" Else |
-    
-
-Else ->
-    "else" If | 
-    "else" "{" Block "}" |
-    "else" "{" "}"
-
-
-While ->
-	"while" "(" logicalValue ")" "{" Block "}" |
-	"while" "(" logicalValue ")" "{" "}"
-
-
-For ->
-	"for" "(" ForInitialization ";" ForCondition ";" ForUpdate ")" "{" Block "}" |
-	"for" "(" ForInitialization ";" ForCondition ";" ForUpdate ")" "{" "}"
-
-
-ForInitialization ->
-	Identifier_A "=" ArithmeticValue
-
-
-ForCondition ->
-	logicalValue
-
-
-ForUpdate ->
-	Unary |
-	Identifier_A AssignOperation Value
     
