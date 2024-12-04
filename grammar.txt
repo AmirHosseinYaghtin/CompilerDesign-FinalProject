@@ -4,24 +4,29 @@ intNum : digit digit*
 floatNum : digit*.digit digit*
 assignBoolOp : =
 assignNumOp : -= | += | *= | /= | =
-relOp : <= | < | > | >= | == | ! = 
-Ident : letter(digit | letter)
+relOp : <= | < | > | >= | == | != 
+Ident : letter(digit | letter | "_")
 Bool : false | true
 
 
 
 
-defineDecl : #Define Ident (floatNum | intNum | bool)\n defineDecl | program
+defineDecl : "#Define" Ident (floatNum | intNum | bool)"\n" defineDecl | program
 
 
 program : (intDecl | boolDecl | varDecl | floatDecl | ifStmt | intAssignStmt | boolAssignStmt | varAssignStmt | floatAssignStmt | constAssignStmt | SwitchStmt | dowhileStmt | minStmt | maxStmt | meanStmt | sqrtNStmt | 
-| comment | unaryExpr | whileStmt | forStmt | printStmt)*
+| oneLineComment | multiLineComment | unaryExpr | doWhileStmt | forStmt | printStmt)*
 
 
-intDecl : int (intDeclWithAssign | intDeclWithoutAssign);
-intDeclWithoutAssign : (Ident,)* Ident
-intDeclWithAssign :
+intDecl : "int" (intDeclWithAssign | intDeclWithoutAssign)";"
+intDeclWithoutAssign : (Ident",")* Ident
+intDeclWithAssign : Ident "," intDeclWithAssign "," mathIntExpr | Ident "," intDeclWithAssign | Ident assignIntOp mathIntExpr
 
+
+mathIntExpr : termInt (("+"| "-" ) termInt)*
+termInt : factorInt (("*" | "/" | "%") factorInt)*
+factorInt : finalInt ("^" finalInt)*
+finalInt : "(" mathIntExpr ")" | "-(" mathIntExpr ")" | Ident | intNum | "-"intNum | "+"intNum | Ident"++" | Ident"--"
 
 
 -----------------------------------------------------------------------
@@ -83,15 +88,19 @@ Alphabet ->
     ("_" | "a"-"z" | "A"-"Z") (Digit | "_" | "a"-"z" | "A"-"Z")*
 
 
-Number_A_Int ->
-	Number_B_Int |
-	"-" Number_B_Int |
-    "+" Number_B_Int
+intNum_A_Int ->
+	intNum
+_B_Int |
+	"-" intNum
+_B_Int |
+    "+" intNum
+_B_Int
 
 
-Number_B_Int ->
+intNum_B_Int ->
 	Digit |
-	Digit Number_B_Int
+	Digit intNum
+_B_Int
 
 
 Boolean ->
@@ -144,37 +153,37 @@ valueInt -> ArithmeticValueInt
 
 
 ArithmeticValue ->
-    ArithmeticValue "+" Term |
-    ArithmeticValue "-" Term | 
-    Term
+    ArithmeticValue "+" termInt |
+    ArithmeticValue "-" termInt | 
+    termInt
 
 
-Term -> Term "*" Power |
-        Term "%" Power |
-        Term "/" Power | Power
+termInt -> termInt "*" Power |
+        termInt "%" Power |
+        termInt "/" Power | Power
 
 
-Power -> Power "^" Factor | Factor
+Power -> Power "^" FactorInt | FactorInt
 
 
-Factor -> Identifier_A | Number_A | "(" ArithmeticValue ")" | "-(" ArithmeticValue ")" | "+(" ArithmeticValue ")" 
+FactorInt -> Identifier_A | intNum_A | "(" ArithmeticValue ")" | "-(" ArithmeticValue ")" | "+(" ArithmeticValue ")" 
 
 
 ArithmeticValueInt ->
-    ArithmeticValueInt "+" TermInt |
-    ArithmeticValueInt "-" TermInt | 
-    TermInt
+    ArithmeticValueInt "+" termIntInt |
+    ArithmeticValueInt "-" termIntInt | 
+    termIntInt
 
 
-TermInt -> TermInt "*" PowerInt |
-        TermInt "%" PowerInt |
-        TermInt "/" PowerInt | PowerInt
+termIntInt -> termIntInt "*" PowerInt |
+        termIntInt "%" PowerInt |
+        termIntInt "/" PowerInt | PowerInt
 
 
-PowerInt -> PowerInt "^" FactorInt | FactorInt
+PowerInt -> PowerInt "^" FactorIntInt | FactorIntInt
 
 
-FactorInt -> Identifier_A | Number_A_Int | "(" ArithmeticValueInt ")" | "-(" ArithmeticValueInt ")" | "+(" ArithmeticValueInt ")" 
+FactorIntInt -> Identifier_A | intNum_A_Int | "(" ArithmeticValueInt ")" | "-(" ArithmeticValueInt ")" | "+(" ArithmeticValueInt ")" 
 
 
 

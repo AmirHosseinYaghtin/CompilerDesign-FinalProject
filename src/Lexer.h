@@ -34,7 +34,7 @@ public:
         lte,            // <=
         plus_plus,      // ++
         minus_minus,    // --
-        oneLine_comment  // "//""
+        oneLine_comment,  // "//""
         start_comment,  // /*
         end_comment,    // */
         comma,          // ,

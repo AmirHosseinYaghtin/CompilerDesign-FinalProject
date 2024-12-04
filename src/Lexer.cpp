@@ -34,7 +34,7 @@ namespace charinfo
 
     LLVM_READNONE inline bool isDot(char c)
     {
-        return (c == '.')
+        return (c == '.');
     }
     LLVM_READNONE inline bool isUnderLine(char c) 
     {
@@ -61,7 +61,7 @@ void Lexer::next(Token &token)
 
         while (charinfo::isLetter(*end) || charinfo::isDigit(*end) || charinfo::isUnderLine(*end))
             ++end;
-            
+
         llvm::StringRef Name(BufferPtr, end - BufferPtr);
         Token::TokenKind kind;
         if (Name == "int")
@@ -117,7 +117,9 @@ void Lexer::next(Token &token)
         else
             kind = Token::ident;
         // generate the token
+    
         formToken(token, end, kind);
+        // llvm::errs() << "letter Kind:" << "$" << token.getText()<<"$" << "\n";
         return;
     }
 
@@ -132,31 +134,37 @@ void Lexer::next(Token &token)
         {
             kind = Token::KW_define;
             formToken(token,end,kind);
+            // llvm::errs() << "define Kind:" << "$" << token.getText()<<"$" << "\n";
         } 
-        else formToken(token, BufferPtr + 1, Token::unknown);
-        return;     
+        else 
+        {
+            formToken(token, BufferPtr + 1, Token::unknown); 
+            // llvm::errs() << "unKind:" << "$" << token.getText()<<"$" << "\n"; 
+            }
+        return;      
     }
 
-    else if (charinfo::isDigit(*BufferPtr) || (charinfo::isDot(*BufferPtr) && charinfo::isDigit(*BufferPtr + 1)))
-    { // check for numbers
+    else if (charinfo::isDigit(*BufferPtr) || (charinfo::isDot(*BufferPtr) && charinfo::isDigit(*(BufferPtr + 1))))
+    {
         const char *end = BufferPtr;
-        bool isFloatNum = false;
 
         while (charinfo::isDigit(*end))
             ++end;
 
         if (charinfo::isDot(*end))
-        {
-            isFloatNum = (charinfo::isDigit(*end - 1) || charinfo::isDigit(*end + 1)) ? true : false; 
+        {             
             ++end;
             while (charinfo::isDigit(*end))
                 ++end;
-
-            if(isFloatNum) formToken(token, end, Token::float_number);
-            else formToken(token, end, Token::unknown);
+            formToken(token, end, Token::float_number); 
+            // llvm::errs() << "float Kind:" << "$" << token.getText()<<"$" << "\n";
         }
 
-        else formToken(token, end, Token::int_number);
+        else 
+        {
+            formToken(token, end, Token::int_number); 
+            // llvm::errs() << "int Kind:" << "$" << token.getText()<<"$" << "\n";
+        }
         return;
     }
 
@@ -380,13 +388,22 @@ void Lexer::next(Token &token)
         }
         
         // generate the token
-        if (isFound) formToken(token, end, kind);
-        else formToken(token, BufferPtr + 1, Token::unknown);
+        if (isFound) 
+        {
+            formToken(token, end, kind); 
+            // llvm::errs() << "spc Kind:" << "$" << token.getText()<<"$" << "\n";
+        }
+        else 
+        {
+            formToken(token, BufferPtr + 1, Token::unknown); 
+            // llvm::errs() << "unKind:" << "$" << token.getText()<<"$" << "\n";
+        }
         return;
     }
     else
     {
         formToken(token, BufferPtr + 1, Token::unknown); 
+        // llvm::errs() << "unnKind:" << "$" << token.getText()<<"$" << "\n";
         return;         
     }
     return;
