@@ -218,12 +218,12 @@ void Lexer::next(Token &token)
             isFound = true;
             end = endWithTwoLetter;
         } 
-        else if (NameWithTwoLetter == "*/")
-        {
-            kind = Token::end_comment;
-            isFound = true;
-            end = endWithTwoLetter;
-        }
+        // else if (NameWithTwoLetter == "*/")
+        // {
+        //     kind = Token::end_comment;
+        //     isFound = true;
+        //     end = endWithTwoLetter;
+        // }
         else if (NameWithTwoLetter == "/=")
         {
             kind = Token::slash_assign;
@@ -238,9 +238,20 @@ void Lexer::next(Token &token)
         }
         else if (NameWithTwoLetter == "/*")
         {
-            kind = Token::start_comment;
-            isFound = true;
-            end = endWithTwoLetter;
+            // kind = Token::start_comment;
+            // isFound = true;
+            // end = endWithTwoLetter;
+            // Multi-line comment
+            BufferPtr += 2; // Skip '/*'
+            while (!*BufferPtr) {
+                if (*BufferPtr == '*' && *(BufferPtr + 1) == '/') {
+                    BufferPtr += 2; // Skip '*/'
+                    break;
+                }
+                else {
+                    BufferPtr++;
+                }
+            }
         }
         else if (NameWithTwoLetter == ">=")
         {
@@ -292,9 +303,18 @@ void Lexer::next(Token &token)
         }
         else if (NameWithTwoLetter == "//")
         {
-            kind = Token::oneLine_comment;
-            isFound = true;
-            end = endWithTwoLetter;
+            // kind = Token::oneLine_comment;
+            // isFound = true;
+            // end = endWithTwoLetter;
+            // Single-line comment
+            BufferPtr += 2; // Skip '//'
+            while (!*BufferPtr && *BufferPtr != '\n') {
+                BufferPtr++;
+            }
+            // Skip the newline character
+            if (*BufferPtr == '\n') {
+                BufferPtr++;
+            }
         }
         else if (NameWithOneLetter == "+")
         {
