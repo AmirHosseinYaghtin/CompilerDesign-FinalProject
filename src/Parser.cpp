@@ -9,6 +9,34 @@ Program *Parser::parse()
 }
 
 
+DefineStmt *Parser::parseDefine() { 
+    llvm::StringRef MacroName;
+    llvm::StringRef MacroValue;
+
+    if (expect(Token::KW_define)){
+        goto _error;
+    }
+    advance();
+
+    if (expect(Token::ident)){
+        goto _error;
+    }
+    MacroName = Tok.getText();
+    advance();
+
+    if (!Tok.is(Token::number) && !Tok.is(Token::ident) && !Tok.is(Token::floatNumber) && !Tok.is(Token::KW_bool)){
+        goto _error;
+    }
+    MacroValue = Tok.getText();
+
+    return new DefineStmt(MacroName, MacroValue);
+
+_error:
+    while (Tok.getKind() != Token::eoi) advance();
+    return nullptr;
+}
+
+
 Program *Parser::parseProgram()
 {
     llvm::SmallVector<AST *> data;
@@ -803,5 +831,76 @@ PrintStmt *Parser::parsePrint()
 _error:
     while (Tok.getKind() != Token::eoi)
         advance();
+    return nullptr;
+}
+
+
+SwitchStmt *Parser::parseSwitch() {// TODO added for switch-case construct
+    Logic *Cond = nullptr;
+    llvm::SmallVector<CaseStmt *> Cases;
+    DefaultStmt *Default = nullptr; // Declare Default as a pointer to DefaultStmt
+    llvm::SmallVector<AST *> DefaultBody;
+
+    if (expect(Token::KW_switch)){
+        goto _error;
+    }
+    advance();
+
+    if (expect(Token::l_paren)){
+            goto _error;
+    }
+    advance();
+
+    Cond = parseLogic();
+    if (!Cond){
+        goto _error;
+    }
+
+    if (expect(Token::r_paren)){
+        goto _error;
+    }
+    advance();
+
+    if (expect(Token::l_brace)){
+        goto _error;
+    }
+    advance();
+
+    while (Tok.is(Token::KW_case)) {
+        advance();
+
+        Expr *CaseValue = parseExpr();
+        if (!CaseValue){ 
+            goto _error;
+        }
+
+        if (expect(Token::colon)){
+            goto _error;
+        }
+        advance();
+
+        llvm::SmallVector<AST *> CaseBody = getBody();
+        Cases.push_back(new CaseStmt(CaseValue, CaseBody));
+    }
+
+    if (Tok.is(Token::KW_default)) { // TODO
+        advance();
+        if (expect(Token::colon)) {
+            goto _error;
+        }
+        advance();
+        llvm::SmallVector<AST *> DefaultBody = getBody();
+        Default = new DefaultStmt(DefaultBody); // Wrap the body in DefaultStmt 
+        } else {
+            Default = nullptr; // No default case
+        }
+        if (!consume(Token::r_brace)) {
+            goto _error;
+        }
+        advance();
+        return new SwitchStmt(Cond, Cases, Default);
+
+_error:
+    while (Tok.getKind() != Token::eoi) advance();
     return nullptr;
 }
