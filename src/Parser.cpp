@@ -618,14 +618,14 @@ Expr *Parser::parseTerm()
     {
         goto _error;
     }
-    while (Tok.isOneOf(Token::star, Token::mod, Token::slash))
+    while (Tok.isOneOf(Token::Mul, Token::Mod, Token::Div))
     {
         BinaryOp::Operator Op;
-        if (Tok.is(Token::star))
+        if (Tok.is(Token::Mul))
             Op = BinaryOp::Mul;
         else if (Tok.is(Token::Devide))
             Op = BinaryOp::Div;
-        else if (Tok.is(Token::mod))
+        else if (Tok.is(Token::Mod))
             Op = BinaryOp::Mod;
         else {
             error();
@@ -835,7 +835,7 @@ _error:
 }
 
 
-SwitchStmt *Parser::parseSwitch() {// TODO added for switch-case construct
+SwitchStmt *Parser::parseSwitchStmt() {// TODO added for switch-case construct
     Logic *Cond = nullptr;
     llvm::SmallVector<CaseStmt *> Cases;
     DefaultStmt *Default = nullptr; // Declare Default as a pointer to DefaultStmt
@@ -904,3 +904,149 @@ _error:
     while (Tok.getKind() != Token::eoi) advance();
     return nullptr;
 }
+
+
+
+WhileStmt *Parser::parseDoWhileStmt()
+{
+    llvm::SmallVector<AST *> Body;
+    Logic *Cond = nullptr;
+
+    if (expect(Token::KW_while)){
+        goto _error;
+    }
+        
+    advance();
+
+    if(expect(Token::l_paren)){
+        goto _error;
+    }
+
+    advance();
+
+    Cond = parseLogic();
+    if (Cond == nullptr)
+    {
+        goto _error;
+    }
+    if(expect(Token::r_paren)){
+        goto _error;
+    }
+
+    advance();
+
+    if (expect(Token::l_brace)){
+        goto _error;
+    }
+
+    advance();
+
+    Body = getBody();
+    if(Body.empty())
+        goto _error;
+        
+
+    return new WhileStmt(Cond, Body);
+
+_error:
+    while (Tok.getKind() != Token::eoi)
+        advance();
+    return nullptr;
+}
+
+ForStmt *Parser::parseForStmt()
+{
+    Assignment *First = nullptr;
+    Logic *Second = nullptr;
+    Assignment *ThirdAssign = nullptr;
+    UnaryOp *ThirdUnary = nullptr;
+    llvm::SmallVector<AST *> Body;
+    Token prev_token;
+    const char* prev_buffer;
+
+    if (expect(Token::KW_for)){
+        goto _error;
+    }
+        
+    advance();
+
+    if(expect(Token::l_paren)){
+        goto _error;
+    }
+
+    advance();
+
+    First = parseIntAssign();
+
+    if (First == nullptr)
+        goto _error;
+        
+    if (First->getAssignKind() != Assignment::Assign)    // The first part can only have a '=' sign
+        goto _error;
+
+    if(expect(Token::semicolon)){
+        goto _error;
+    }
+
+    advance();
+
+    Second = parseLogic();
+
+    if (Second == nullptr)
+        goto _error;
+        
+    if(expect(Token::semicolon)){
+        goto _error;
+    }
+
+    advance();
+
+    prev_token = Tok;
+    prev_buffer = Lex.getBuffer();
+
+    ThirdAssign = parseIntAssign();
+
+    if (ThirdAssign == nullptr){
+        Tok = prev_token;
+        Lex.setBufferPtr(prev_buffer);
+
+        ThirdUnary = parseUnary();
+        if (ThirdUnary == nullptr){
+            goto _error;
+        }
+
+    }
+    else{
+        if(ThirdAssign->getAssignKind() == Assignment::Assign)   // The third part cannot have only '=' sign
+            goto _error;
+    }
+
+
+    if(expect(Token::r_paren)){
+        goto _error;
+    }
+
+    advance();
+
+    if(expect(Token::l_brace)){
+        goto _error;
+    }
+
+    advance();
+
+    Body = getBody();
+
+    if (Body.empty())
+        goto _error;
+
+    return new ForStmt(First, Second, ThirdAssign, ThirdUnary, Body);
+
+_error:
+    while (Tok.getKind() != Token::eoi)
+        advance();
+    return nullptr;  
+
+}
+
+
+
