@@ -43,10 +43,12 @@ class Parser {
 	// pattern specified. each one produces its own node
 	// one node can have multiple subnodes inside it
 
+	DefineStmt *parseDefine();
 	Program *parseS();
 	Program *parseProgram();
 	Assignment *parseAssignList();
 	void parseComment(); // should only error if not valid
+	UnaryOperation *parseUnaryOp();
 
 	IntDecleration *parseIntDecl();
 	Expr *parseMathIntExpr();
