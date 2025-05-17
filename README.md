@@ -48,5 +48,3 @@ Ability to cast between supported data types.
 - **LLVM** (as the backend for code generation)
 
 ---
-
-## 📂 Project Structure
