@@ -46,5 +46,6 @@ Ability to cast between supported data types.
 ## 🛠️ Technologies Used
 - **C++**
 - **LLVM** (as the backend for code generation)
-
+- **Constant Propagation** (Compiler Optimization)
+- **Constant Folding** (Compiler Optimization)
 ---
